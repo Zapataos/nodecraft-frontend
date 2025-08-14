@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
     <style>
@@ -38,7 +37,6 @@
             height: 100%;
             z-index: -2;
         }
-        
         .vignette-overlay {
             position: fixed;
             top: 0;
@@ -55,7 +53,6 @@
             transform: translateY(-3px);
         }
         .logo-brackets { color: var(--purple); }
-        
         .glass-panel {
             background: rgba(15, 15, 30, 0.4);
             backdrop-filter: blur(10px);
@@ -104,7 +101,6 @@
             border-color: var(--purple);
             box-shadow: 0 0 10px 2px rgba(160, 32, 240, 0.4);
         }
-        
         /* --- ESTILOS PARA ENCABEZADO MODERNO --- */
         #main-nav {
             transition: background-color 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
@@ -115,7 +111,6 @@
             -webkit-backdrop-filter: blur(12px);
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
-
         /* --- ESTILOS DEL FORMULARIO FLIP-CARD --- */
         .flip-container {
             perspective: 1000px;
@@ -168,7 +163,6 @@
         <i data-feather="arrow-up" class="w-6 h-6"></i>
     </a>
     <div class="relative z-10">
-        
         <nav id="main-nav" class="fixed top-0 left-0 right-0 p-6 z-20">
             <div class="container mx-auto flex justify-between items-center">
                 <a href="#" class="text-2xl font-bold tracking-wider"><span class="logo-brackets">{</span> N <span class="logo-brackets">}</span></a>
@@ -226,7 +220,6 @@
                      </div>
                 </div>
             </section>
-            
             <section class="p-4 md:p-8 scroll-mt-24" id="services-section"> 
                  <div class="text-center mb-16" id="services-title"> 
                     <h2 class="text-4xl md:text-5xl font-bold focusable-text">Nuestros Servicios</h2>
@@ -252,7 +245,6 @@
                 </div>
             </section>
             -->
-            
             <section id="founder" class="p-4 md:p-8 scroll-mt-24">
                  <div class="glass-panel max-w-5xl mx-auto p-8 md:p-12 connect-node" data-connect-group="4">
                     <div class="grid md:grid-cols-2 gap-12 items-center">
@@ -277,7 +269,6 @@
                     <h2 class="text-4xl md:text-5xl font-bold mb-6 focusable-text">¿Listo para transformar tu negocio?</h2>
                     <p class="max-w-2xl mx-auto text-lg text-gray-300 mb-10 focusable-text">Contáctanos hoy mismo y descubre cómo la automatización de NodeCraft puede potenciar tu empresa.</p>
                 </div>
-                
                 <div class="max-w-2xl mx-auto relative">
                     <div class="flip-container">
                         <div class="flip-card">
@@ -319,7 +310,6 @@
                 </div>
             </section>
         </main>
-
         <!-- ========== MODAL DE SERVICIOS - INICIO ========== -->
         <div id="service-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4 transition-opacity duration-300">
             <div id="modal-content" class="bg-gray-900/95 border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative transform transition-all duration-300 scale-95 opacity-0">
@@ -350,7 +340,6 @@
             </div>
         </footer>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- LÓGICA DE ANIMACIÓN DE PARTÍCULAS (Three.js) ---
@@ -359,7 +348,6 @@
             const simplex = new SimplexNoise();
             let targetIntensity = 0.3;
             let currentIntensity = 0.3;
-
             function initThreeJS() {
                 const container = document.getElementById('particle-wave-bg');
                 if (!container) return;
@@ -370,7 +358,6 @@
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 renderer.setClearColor(0x000000, 0);
                 container.appendChild(renderer.domElement);
-
                 const geometry = new THREE.PlaneGeometry(800, 800, 80, 80);
                 const material = new THREE.PointsMaterial({
                     size: 1.5,
@@ -386,7 +373,6 @@
                 points.position.y = -50;
                 scene.add(points);
             }
-
             function createCircleTexture() {
                 const canvas = document.createElement('canvas');
                 canvas.width = 32; canvas.height = 32;
@@ -397,7 +383,6 @@
                 context.fill();
                 return new THREE.CanvasTexture(canvas);
             }
-
             function animate() {
                 requestAnimationFrame(animate);
                 if (!scene || !points) return;
@@ -413,11 +398,9 @@
                 points.geometry.attributes.position.needsUpdate = true;
                 renderer.render(scene, camera);
             }
-
             // --- LÓGICA DE ENFOQUE GRANULAR DE TEXTO ---
             const focusableElements = document.querySelectorAll('.focusable-text');
             const UMBRAL = window.innerHeight / 2.5;
-
             function updateTextFocus() {
                 const viewportCenter = window.innerHeight / 2;
                 focusableElements.forEach(el => {
@@ -430,7 +413,6 @@
                     el.style.opacity = opacity;
                 });
             }
-
             // --- LÓGICA PARA LÍNEAS DE CONEXIÓN DE NODOS (SVG) ---
             const svg = document.getElementById('node-lines-svg');
             const lineObserver = new IntersectionObserver((entries) => {
@@ -441,50 +423,41 @@
                     }
                 });
             }, { threshold: 0.3 });
-
             function drawConnections() {
                 if (!svg) return;
                 svg.innerHTML = '';
                 const connectionGroups = document.querySelectorAll('[data-connect-group]');
                 let lastNodeOfPreviousGroup = null;
-
                 connectionGroups.forEach(group => {
                     const groupNodes = Array.from(group.querySelectorAll('.connect-node')).filter(el => {
                         const rect = el.getBoundingClientRect();
                         return rect.width > 0 && rect.height > 0;
                     });
-
                     if (lastNodeOfPreviousGroup && groupNodes.length > 0) {
                         createPath(lastNodeOfPreviousGroup, groupNodes[0]);
                     }
-
                     for (let i = 0; i < groupNodes.length - 1; i++) {
                         createPath(groupNodes[i], groupNodes[i + 1]);
                     }
-
                     if (groupNodes.length > 0) {
                         lastNodeOfPreviousGroup = groupNodes[groupNodes.length - 1];
                     }
                 });
             }
-
             function createPath(startEl, endEl) {
                 const startRect = startEl.getBoundingClientRect();
                 const endRect = endEl.getBoundingClientRect();
                 const scrollY = window.scrollY;
-
                 let startX = startRect.left + startRect.width / 2;
                 let startY = startRect.bottom + scrollY;
                 let endX = endRect.left + endRect.width / 2;
                 let endY = endRect.top + scrollY;
-
                 if (Math.abs(startRect.top - endRect.top) < 100) {
                     startX = startRect.right;
                     startY = startRect.top + scrollY + startRect.height / 2;
                     endX = endRect.left;
                     endY = endRect.top + scrollY + endRect.height / 2;
                 }
-
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 const d = `M ${startX} ${startY} C ${startX} ${startY + 100}, ${endX} ${endY - 100}, ${endX} ${endY}`;
                 path.setAttribute('d', d);
@@ -492,7 +465,6 @@
                 svg.appendChild(path);
                 lineObserver.observe(path);
             }
-
             // --- LÓGICA PARA EFECTO 3D EN TARJETAS ---
             // Efecto para tarjetas normales
             const cards = document.querySelectorAll('.glass-panel:not(#contact-card-front):not([data-connect-group="4"] .glass-panel)');
@@ -509,7 +481,6 @@
                     card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
                 });
             });
-
             // Efecto muy sutil para la tarjeta del fundador
             const founderSection = document.getElementById('founder');
             if (founderSection) {
@@ -518,7 +489,6 @@
                     // Primero eliminamos cualquier event listener existente
                     const newFounderCard = founderCard.cloneNode(true);
                     founderCard.parentNode.replaceChild(newFounderCard, founderCard);
-                    
                     // Aplicamos el efecto muy sutil
                     newFounderCard.addEventListener('mousemove', (e) => {
                         const rect = newFounderCard.getBoundingClientRect();
@@ -530,20 +500,17 @@
                         newFounderCard.style.transform = `perspective(2000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.002)`;
                         newFounderCard.style.transition = 'transform 0.1s ease-out';
                     });
-                    
                     newFounderCard.addEventListener('mouseleave', () => {
                         newFounderCard.style.transform = 'perspective(2000px) rotateX(0) rotateY(0) scale(1)';
                         newFounderCard.style.transition = 'transform 0.3s ease-out';
                     });
                 }
             }
-
             // --- LÓGICA PARA BOTÓN "VOLVER ARRIBA" Y MENÚ MÓVIL ---
             const mainNav = document.getElementById('main-nav');
             const backToTopBtn = document.getElementById('back-to-top');
             const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
-
             function handleScrollAppearance() {
                 const scrollY = window.scrollY;
                 if (scrollY > 50) {
@@ -559,7 +526,6 @@
                     backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
                 }
             }
-
             function triggerParticleBurst() {
                 targetIntensity = 10.0;
                 const originalColor = new THREE.Color(0x3b82f6);
@@ -574,17 +540,14 @@
                     }
                 }, 800);
             }
-
             backToTopBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 triggerParticleBurst();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
-
             mobileMenuButton.addEventListener('click', () => {
                 mobileMenu.classList.toggle('hidden');
             });
-
             // --- MANEJO DE EVENTOS OPTIMIZADO ---
             function debounce(func, wait) {
                 let timeout;
@@ -597,7 +560,6 @@
                     timeout = setTimeout(later, wait);
                 };
             }
-
             let isTicking = false;
             let scrollTimeout;
             function onScroll() {
@@ -613,19 +575,16 @@
                 clearTimeout(scrollTimeout);
                 scrollTimeout = setTimeout(() => { targetIntensity = 0.3; }, 200);
             }
-
             // --- INICIALIZACIÓN ---
             initThreeJS();
             animate();
             feather.replace();
-
             // Usar un pequeño retraso para asegurar que el DOM esté completamente renderizado
             setTimeout(() => {
                 drawConnections();
                 updateTextFocus();
                 handleScrollAppearance();
             }, 100);
-
             // Listeners
             window.addEventListener('scroll', onScroll);
             window.addEventListener('resize', debounce(() => {
@@ -637,20 +596,16 @@
                 setTimeout(drawConnections, 100);
                 updateTextFocus();
             }, 150));
-
             // --- LÓGICA DE DESPLAZAMIENTO SUAVE PERSONALIZADO ---
             // Selecciona todos los enlaces de anclaje dentro del nav con la clase nav-link
             const navLinks = document.querySelectorAll('nav a.nav-link');
-
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     // Evita el comportamiento predeterminado del enlace
                     e.preventDefault();
-
                     // Obtiene el ID del objetivo desde el atributo href
                     const targetId = this.getAttribute('href').substring(1); // Elimina el '#'
                     const targetElement = document.getElementById(targetId);
-
                     if (targetElement) {
                         // Calcula la posición de desplazamiento
                         // offsetTop es la distancia desde la parte superior del documento
@@ -659,9 +614,7 @@
                         const offsetTop = targetElement.offsetTop;
                         const navbarHeight = document.getElementById('main-nav').offsetHeight;
                         const additionalOffset = 20; // Espacio adicional en píxeles
-
                         const scrollToPosition = offsetTop - navbarHeight - additionalOffset;
-
                         // Realiza el desplazamiento suave
                         window.scrollTo({
                             top: scrollToPosition,
@@ -670,77 +623,80 @@
                     }
                 });
             });
-
-            // --- FORMULARIO DE CONTACTO INTERACTIVO ---
+            // --- FORMULARIO DE CONTACTO INTERACTIVO (MODIFICADO PARA GOOGLE FORMS) ---
             document.getElementById('contact-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
                 const flipCard = document.querySelector('.flip-card');
                 const form = e.target;
                 const submitBtn = form.querySelector('button[type="submit"]');
-                
+
                 // Deshabilitar el botón para evitar múltiples envíos
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Enviando...';
-                
-                try {
-                    const formData = {
-                        name: form.name.value,
-                        email: form.email.value,
-                        message: form.message.value
-                    };
 
-                    const response = await fetch('http://localhost:3000/api/contact', {
+                try {
+                    // --- CONFIGURACIÓN DE GOOGLE FORMS PARA NODECRAFT ---
+                    const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSco3Yf8yTkQPM9P4yUK4-VVxuo495zLuOp7bOrzh1YK_tYruw/formResponse';
+                    const GOOGLE_FORM_FIELDS = {
+                        name: 'entry.1581864622',
+                        email: 'entry.1519206072',
+                        message: 'entry.1539881603'
+                    };
+                    // --- FIN CONFIGURACIÓN DE GOOGLE FORMS ---
+
+                    const formData = new FormData();
+                    formData.append(GOOGLE_FORM_FIELDS.name, form.name.value);
+                    formData.append(GOOGLE_FORM_FIELDS.email, form.email.value);
+                    formData.append(GOOGLE_FORM_FIELDS.message, form.message.value);
+
+                    // Enviar datos a Google Forms usando fetch
+                    const response = await fetch(GOOGLE_FORM_ACTION_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formData)
+                        mode: 'no-cors', // Importante para Google Forms
+                        body: formData
                     });
 
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        form.reset();
-                        // Animación de éxito con tiempo extendido para leer el mensaje
-                        flipCard.style.transform = 'rotateY(180deg)';
-                        // Mostrar el mensaje por 3 segundos (3000ms) en lugar de 2
-                        setTimeout(() => {
-                            flipCard.style.transform = 'rotateY(0deg)';
-                        }, 3000);
-                    } else {
-                        throw new Error(result.message || 'Error al enviar el mensaje');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    // Solo log del error, sin alerta
-                } finally {
-                    // Re-habilitar el botón
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Enviar Mensaje';
-                }
-                // 1. Gira la tarjeta
-                flipCard.style.transform = 'rotateY(180deg)';
+                    // Nota: Con 'no-cors', no podemos verificar el éxito real del envío.
+                    // Pero si no hay error en el fetch, asumimos que se envió.
 
-                // 2. Crear partículas y animación después de que termine la animación de la tarjeta
-                setTimeout(() => {
-                    triggerParticleBurst();
-                    createParticles(document.querySelector('.flip-container'));
-                    
-                    // 3. Resetear tarjeta después de la animación de partículas
+                    // Resetear el formulario
+                    form.reset();
+
+                    // Mostrar mensaje de éxito (girar la tarjeta)
+                    flipCard.style.transform = 'rotateY(180deg)';
+
+                    // Esperar un poco antes de mostrar las partículas para que coincida con la animación
+                    setTimeout(() => {
+                        triggerParticleBurst();
+                        createParticles(document.querySelector('.flip-container'));
+                    }, 500); // Ajusta el tiempo si es necesario
+
+                    // Resetear la tarjeta después de un tiempo para mostrar el mensaje de éxito
+                    // Y hacer scroll hacia arriba
                     setTimeout(() => {
                         flipCard.style.transform = 'rotateY(0deg)';
+                        // Scroll hacia arriba después de enviar
                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }, 2000); // Aumentado de 1000ms a 2000ms para más tiempo de visualización
-                }, 4000); // Aumentado de 3500ms a 4000ms para dar más tiempo a la animación inicial
-            });
+                    }, 3000); // Mostrar el mensaje de éxito por 3 segundos
 
+                } catch (error) {
+                    console.error('Error al enviar el formulario a Google Forms:', error);
+                    // Opcional: Mostrar un mensaje de error al usuario
+                    // alert('Hubo un problema al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.');
+                } finally {
+                    // Re-habilitar el botón (lo hacemos aquí para que se reactive incluso si hay un error,
+                    // pero después del mensaje de éxito)
+                    setTimeout(() => {
+                         submitBtn.disabled = false;
+                         submitBtn.textContent = 'Enviar Mensaje';
+                    }, 3000); // Re-enable después del mensaje de éxito
+                }
+            });
             // --- FUNCIONALIDAD DE PARTÍCULAS 2D ---
             function createParticles(container) {
                 const particles = [];
                 const rect = container.getBoundingClientRect();
                 const colors = ['#8b5cf6', '#6366f1', '#a78bfa', '#c4b5fd'];
-
                 for (let i = 0; i < 30; i++) {
                     const particle = document.createElement('div');
                     const size = 5 + Math.random() * 10;
@@ -758,11 +714,9 @@
                         transform: 'translate(-50%, -50%)',
                         opacity: '0.8'
                     });
-
                     const angle = Math.random() * Math.PI * 2;
                     const distance = 50 + Math.random() * 150;
                     const duration = 800 + Math.random() * 800;
-
                     particle.animate([
                         { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.8 },
                         { transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0.1)`, opacity: 0 }
@@ -771,10 +725,8 @@
                         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
                         fill: 'forwards'
                     });
-
                     container.appendChild(particle);
                     particles.push(particle);
-
                     setTimeout(() => {
                         if (particle.parentNode) {
                             particle.parentNode.removeChild(particle);
@@ -791,14 +743,12 @@
                 'Flujos Personalizados con n8n': '¿Tienes un proceso único que ninguna herramienta estándar puede manejar? Nosotros lo hacemos posible. Diseñamos y construimos automatizaciones a medida que conectan tus aplicaciones (CRM, ERP, hojas de cálculo, email, etc.) para que funcionen en perfecta sintonía. Sea cual sea tu desafío, creamos el flujo de trabajo exacto que tu negocio necesita.',
                 'Dashboards y Reportes en Power BI': 'Transforma tus datos complejos en decisiones inteligentes. Convertimos tus números de contabilidad, finanzas o carteras de inversión en dashboards interactivos y visuales. Obtén una visión clara y en tiempo real de tu rendimiento, identifica tendencias clave y presenta tus resultados de una forma profesional e impactante.'
             };
-
             const servicePanels = document.querySelectorAll('[data-connect-group="2"] .glass-panel');
             const modal = document.getElementById('service-modal');
             const modalContent = document.getElementById('modal-content');
             const modalTitle = document.getElementById('modal-title');
             const modalDescription = document.getElementById('modal-description');
             const closeModalBtn = document.getElementById('modal-close-btn');
-
             servicePanels.forEach(panel => {
                 panel.style.cursor = 'pointer';
                 panel.addEventListener('click', () => {
@@ -811,7 +761,6 @@
                     }
                 });
             });
-
             function closeModal() {
                 modal.classList.add('opacity-0');
                 modalContent.classList.remove('active');
@@ -820,7 +769,6 @@
                     modal.classList.remove('opacity-0');
                 }, 300);
             }
-
             closeModalBtn.addEventListener('click', closeModal);
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
