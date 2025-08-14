@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NodeCraft - Automatización Inteligente</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="Image/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <style>
+        :root {
+            --purple: #A020F0;
+            --dark-bg: #0a0a1a;
+            --light-gray: #E0E0E0;
+            --white: #FFFFFF;
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: var(--light-gray);
+            font-family: 'Roboto', sans-serif;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Exo 2', sans-serif;
+            color: var(--white);
+        }
+        #particle-wave-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+        
+        .vignette-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(10, 10, 26, 0.2) 0%, rgba(10, 10, 26, 0.9) 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .btn-glow { transition: all 0.3s ease-in-out; }
+        .btn-glow:hover {
+            box-shadow: 0 0 20px 7px rgba(160, 32, 240, 0.5);
+            transform: translateY(-3px);
+        }
+        .logo-brackets { color: var(--purple); }
+        
+        .glass-panel {
+            background: rgba(15, 15, 30, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s ease-out, background 0.3s ease;
+        }
+        .glass-panel:hover {
+            background: rgba(25, 25, 45, 0.5);
+        }
+        .focusable-text {
+            transition: opacity 0.15s linear, text-shadow 0.15s linear;
+        }
+        #node-lines-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .connecting-line {
+            stroke: rgba(255, 255, 255, 0.25);
+            stroke-width: 1.5;
+            fill: none;
+            stroke-dashoffset: 1000;
+            stroke-dasharray: 1000;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.47, 0, 0.745, 0.715);
+        }
+        .connecting-line.is-drawing {
+            stroke-dashoffset: 0 !important;
+        }
+        .form-input {
+            background-color: rgba(10, 10, 26, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: var(--light-gray);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            width: 100%;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--purple);
+            box-shadow: 0 0 10px 2px rgba(160, 32, 240, 0.4);
+        }
+        
+        /* --- ESTILOS PARA ENCABEZADO MODERNO --- */
+        #main-nav {
+            transition: background-color 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .nav-scrolled {
+            background: rgba(10, 10, 26, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- ESTILOS DEL FORMULARIO FLIP-CARD --- */
+        .flip-container {
+            perspective: 1000px;
+            min-height: 500px;
+            position: relative;
+            width: 100%;
+        }
+        .flip-card {
+            position: relative;
+            width: 100%;
+            min-height: 500px;
+            transform-style: preserve-3d;
+            transition: transform 1s ease-in-out;
+            transform-origin: center;
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            min-height: 100%;
+            backface-visibility: hidden;
+            border-radius: inherit;
+            background: inherit;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        /* --- ESTILOS DEL MODAL --- */
+        #service-modal.flex {
+            display: flex;
+        }
+        #service-modal.hidden {
+            display: none;
+        }
+        #modal-content.active {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="particle-wave-bg"></div>
+    <div class="vignette-overlay"></div>
+    <svg id="node-lines-svg"></svg>
+    <a href="#" id="back-to-top" class="fixed bottom-8 right-8 z-50 p-3 bg-[var(--purple)] text-white rounded-full shadow-lg btn-glow opacity-0 pointer-events-none transition-all duration-300" aria-label="Volver arriba">
+        <i data-feather="arrow-up" class="w-6 h-6"></i>
+    </a>
+    <div class="relative z-10">
+        
+        <nav id="main-nav" class="fixed top-0 left-0 right-0 p-6 z-20">
+            <div class="container mx-auto flex justify-between items-center">
+                <a href="#" class="text-2xl font-bold tracking-wider"><span class="logo-brackets">{</span> N <span class="logo-brackets">}</span></a>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#services-title" class="text-white font-bold hover:text-[var(--purple)] transition-colors nav-link">Servicios</a>
+                    <a href="#founder" class="text-gray-300 hover:text-[var(--purple)] transition-colors nav-link">Sobre Nosotros</a>
+                    <a href="#contact" class="text-gray-300 hover:text-[var(--purple)] transition-colors nav-link">Contacto</a>
+                </div>
+                <!-- Menú hamburguesa para móviles -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-white focus:outline-none">
+                        <i data-feather="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+             <!-- Menú desplegable para móviles -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                <a href="#services-title" class="block py-2 px-4 text-sm text-white hover:bg-gray-700/50 rounded nav-link">Servicios</a>
+                <a href="#founder" class="block py-2 px-4 text-sm text-white hover:bg-gray-700/50 rounded nav-link">Sobre Nosotros</a>
+                <a href="#contact" class="block py-2 px-4 text-sm text-white hover:bg-gray-700/50 rounded nav-link">Contacto</a>
+            </div>
+        </nav>
+        <header class="min-h-screen flex items-center justify-center text-center px-4">
+            <div class="max-w-4xl mx-auto pt-20">
+                <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold tracking-wider focusable-text">
+                    <span class="logo-brackets">{</span> NodeCraft <span class="logo-brackets">}</span>
+                </h1>
+                <h2 class="text-2xl md:text-3xl mt-4 text-white focusable-text">Automatización Inteligente para tu Negocio</h2>
+                <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-gray-300 focusable-text">
+                    Desbloquea la eficiencia y optimiza tus procesos administrativos con soluciones personalizadas basadas en n8n.
+                </p>
+                <a href="#contact" class="btn-glow inline-block bg-[var(--purple)] text-white font-bold py-3 px-8 rounded-lg mt-10 text-lg hover:bg-[#b030ff]">
+                    Agenda una consulta gratuita
+                </a>
+            </div>
+        </header>
+        <main class="container mx-auto px-6 py-20 space-y-36 md:space-y-48">
+            <section id="why" class="p-4 md:p-8">
+                <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 focusable-text">Impulsa tu Negocio con Automatización Inteligente</h2>
+                <div class="grid md:grid-cols-3 gap-8 text-center" data-connect-group="1">
+                    <div class="glass-panel p-8 connect-node">
+                        <div class="flex justify-center mb-4"><i data-feather="zap" class="w-12 h-12 text-[var(--purple)]"></i></div>
+                        <h3 class="text-2xl font-bold mb-3 focusable-text">Eficiencia</h3>
+                        <p class="text-gray-300 focusable-text">Optimizamos tus flujos de trabajo y reducimos tareas manuales para que ahorres tiempo y recursos.</p>
+                    </div>
+                    <div class="glass-panel p-8 connect-node">
+                        <div class="flex justify-center mb-4"><i data-feather="bar-chart-2" class="w-12 h-12 text-[var(--purple)]"></i></div>
+                        <h3 class="text-2xl font-bold mb-3 focusable-text">Productividad</h3>
+                        <p class="text-gray-300 focusable-text">Liberamos a tu equipo de tareas repetitivas para que se enfoque en lo que realmente importa.</p>
+                    </div>
+                    <div class="glass-panel p-8 connect-node">
+                         <div class="flex justify-center mb-4"><i data-feather="cpu" class="w-12 h-12 text-[var(--purple)]"></i></div>
+                         <h3 class="text-2xl font-bold mb-3 focusable-text">Innovación</h3>
+                         <p class="text-light-gray">Te ayudamos a adoptar la tecnología del futuro y a mantener tu ventaja competitiva.</p>
+                     </div>
+                </div>
+            </section>
+            
+            <section class="p-4 md:p-8 scroll-mt-24" id="services-section"> 
+                 <div class="text-center mb-16" id="services-title"> 
+                    <h2 class="text-4xl md:text-5xl font-bold focusable-text">Nuestros Servicios</h2>
+                </div>
+                 <div id="services" class="max-w-4xl mx-auto grid sm:grid-cols-2 gap-8" data-connect-group="2">
+                    <div class="glass-panel p-6 text-center connect-node"><h3 class="text-xl font-bold focusable-text">Automatización de Facturas</h3></div>
+                    <div class="glass-panel p-6 text-center connect-node"><h3 class="text-xl font-bold focusable-text">Conciliación de Cuentas</h3></div>
+                    <div class="glass-panel p-6 text-center connect-node"><h3 class="text-xl font-bold focusable-text">Atención al Cliente y Ventas</h3></div>
+                    <div class="glass-panel p-6 text-center connect-node"><h3 class="text-xl font-bold focusable-text">Flujos Personalizados con n8n</h3></div>
+                    <div class="glass-panel p-6 text-center connect-node md:col-span-2"><h3 class="text-xl font-bold focusable-text">Dashboards y Reportes en Power BI</h3></div>
+                 </div>
+            </section>
+            <!-- Sección de Casos de Éxito (Ocultada temporalmente)
+            <section id="cases" class="p-4 md:p-8 scroll-mt-24">
+                <h2 class="text-4xl md:text-5xl font-bold text-center mb-12 focusable-text">Casos de Éxito</h2>
+                <div class="glass-panel max-w-4xl mx-auto p-10 connect-node" data-connect-group="3">
+                    <h3 class="text-2xl font-bold text-[var(--purple)] mb-4 focusable-text">Automatización del Flujo de Facturación</h3>
+                    <div class="space-y-4">
+                        <p class="focusable-text"><strong class="text-white">Problema:</strong> La empresa X perdía horas a la semana procesando facturas manualmente.</p>
+                        <p class="focusable-text"><strong class="text-white">Solución:</strong> Implementamos un flujo de n8n que extrae datos automáticamente y los registra en su sistema contable.</p>
+                        <p class="mt-4 focusable-text"><strong class="text-white">Resultado:</strong> <span class="bg-[var(--purple)]/20 text-[#d18cff] px-2 py-1 rounded">Reducción del 90% en el tiempo de procesamiento y eliminación de errores.</span></p>
+                    </div>
+                </div>
+            </section>
+            -->
+            
+            <section id="founder" class="p-4 md:p-8 scroll-mt-24">
+                 <div class="glass-panel max-w-5xl mx-auto p-8 md:p-12 connect-node" data-connect-group="4">
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div class="text-center md:text-left">
+                            <h3 class="text-3xl font-bold text-gray-300 focusable-text">Fundador</h3>
+                            <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-6 focusable-text">Innovación al servicio de tu negocio</h2>
+                            <p class="text-lg text-gray-300 mb-6 focusable-text">
+                                "Soy Oscar, y creé NodeCraft para transformar procesos contables y administrativos en soluciones inteligentes. Mi objetivo: que la automatización sea una herramienta estratégica para que tu empresa gane eficiencia y tiempo para lo que realmente importa."
+                            </p>
+                            <a href="https://www.linkedin.com/in/zapataoscar/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-gray-300 hover:text-white transition-colors">
+                                <i data-feather="linkedin" class="w-5 h-5 mr-2"></i> Conéctate en LinkedIn
+                            </a>
+                        </div>
+                        <div class="flex justify-center">
+                            <img src="Image/Perfil_fundador.jpg" alt="Oscar - Fundador de NodeCraft" class="rounded-full w-64 h-64 md:w-80 md:h-80 object-cover border-2 border-gray-700 shadow-lg">
+                        </div>
+                    </div>
+                 </div>
+            </section>
+            <section id="contact" class="p-4 md:p-8 scroll-mt-24">
+                <div class="text-center">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6 focusable-text">¿Listo para transformar tu negocio?</h2>
+                    <p class="max-w-2xl mx-auto text-lg text-gray-300 mb-10 focusable-text">Contáctanos hoy mismo y descubre cómo la automatización de NodeCraft puede potenciar tu empresa.</p>
+                </div>
+                
+                <div class="max-w-2xl mx-auto relative">
+                    <div class="flip-container">
+                        <div class="flip-card">
+                            <!-- Frente: Formulario -->
+                            <div id="contact-card-front" class="flip-card-front glass-panel p-8 rounded-2xl shadow-2xl">
+                                <form id="contact-form" class="space-y-6" novalidate>
+                                    <div>
+                                        <label for="name" class="block text-sm font-bold text-gray-300 mb-2">Nombre</label>
+                                        <input type="text" id="name" name="name" required 
+                                               class="w-full px-4 py-3 bg-black/30 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label for="email" class="block text-sm font-bold text-gray-300 mb-2">Email</label>
+                                        <input type="email" id="email" name="email" required 
+                                               class="w-full px-4 py-3 bg-black/30 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label for="message" class="block text-sm font-bold text-gray-300 mb-2">¿Cómo podemos ayudarte?</label>
+                                        <textarea id="message" name="message" rows="4" required 
+                                                  class="w-full px-4 py-3 bg-black/30 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
+                                    </div>
+                                    <div class="pt-2">
+                                        <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                                            Enviar Mensaje
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- Reverso: Mensaje de agradecimiento -->
+                            <div class="flip-card-back glass-panel p-8">
+                                <div>
+                                    <div class="text-5xl mb-4">🎉</div>
+                                    <h3 class="text-2xl font-bold text-white mb-2">¡Mensaje Enviado!</h3>
+                                    <p class="text-gray-300">Gracias por contactarnos. Nos estaremos comunicando contigo a la brevedad.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ========== MODAL DE SERVICIOS - INICIO ========== -->
+        <div id="service-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4 transition-opacity duration-300">
+            <div id="modal-content" class="bg-gray-900/95 border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative transform transition-all duration-300 scale-95 opacity-0">
+                <button id="modal-close-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                    <i data-feather="x" class="w-8 h-8"></i>
+                </button>
+                <h3 id="modal-title" class="text-3xl font-bold mb-4 text-white"></h3>
+                <p id="modal-description" class="text-light-gray leading-relaxed"></p>
+            </div>
+        </div>
+        <!-- ========== MODAL DE SERVICIOS - FIN ========== -->
+        <footer class="bg-black/50 border-t border-gray-800/70 mt-20 py-8 px-6">
+            <div class="container mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                <div class="mb-4 md:mb-0">
+                    <h4 class="text-2xl font-bold tracking-wider"><span class="logo-brackets">{</span> NodeCraft <span class="logo-brackets">}</span></h4>
+                    <p class="text-sm text-gray-400 mt-1">© 2025 NodeCraft. Todos los derechos reservados.</p>
+                </div>
+                <div class="flex justify-center space-x-6 mb-4 md:mb-0">
+                    <a href="https://www.linkedin.com/company/108309434/admin/page-posts/published/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-[var(--purple)] transition-colors"><i data-feather="linkedin" class="w-6 h-6"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-[var(--purple)] transition-colors"><i data-feather="youtube" class="w-6 h-6"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-[var(--purple)] transition-colors"><i data-feather="instagram" class="w-6 h-6"></i></a>
+                </div>
+                <div class="text-sm text-gray-400 space-x-4">
+                    <a href="politica-privacidad.html" class="hover:text-white transition-colors transition-all duration-200 hover:underline">Política de Privacidad</a>
+                    <span>|</span>
+                    <a href="terminos-servicio.html" class="hover:text-white transition-colors transition-all duration-200 hover:underline">Términos de Servicio</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- LÓGICA DE ANIMACIÓN DE PARTÍCULAS (Three.js) ---
+            let scene, camera, renderer, points;
+            let clock = new THREE.Clock();
+            const simplex = new SimplexNoise();
+            let targetIntensity = 0.3;
+            let currentIntensity = 0.3;
+
+            function initThreeJS() {
+                const container = document.getElementById('particle-wave-bg');
+                if (!container) return;
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.z = 300;
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0x000000, 0);
+                container.appendChild(renderer.domElement);
+
+                const geometry = new THREE.PlaneGeometry(800, 800, 80, 80);
+                const material = new THREE.PointsMaterial({
+                    size: 1.5,
+                    color: 0x3b82f6,
+                    map: createCircleTexture(),
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    opacity: 0.6,
+                });
+                points = new THREE.Points(geometry, material);
+                points.rotation.x = -Math.PI / 4;
+                points.position.y = -50;
+                scene.add(points);
+            }
+
+            function createCircleTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 32; canvas.height = 32;
+                const context = canvas.getContext('2d');
+                context.beginPath();
+                context.arc(16, 16, 16, 0, 2 * Math.PI);
+                context.fillStyle = '#FFFFFF';
+                context.fill();
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (!scene || !points) return;
+                const elapsedTime = clock.getElapsedTime();
+                currentIntensity += (targetIntensity - currentIntensity) * 0.05;
+                const positions = points.geometry.attributes.position.array;
+                for (let i = 0; i < positions.length; i += 3) {
+                    const x = positions[i];
+                    const y = positions[i + 1];
+                    const noise = simplex.noise3D(x * 0.005, y * 0.005, elapsedTime * 0.2);
+                    positions[i + 2] = noise * 40 * currentIntensity;
+                }
+                points.geometry.attributes.position.needsUpdate = true;
+                renderer.render(scene, camera);
+            }
+
+            // --- LÓGICA DE ENFOQUE GRANULAR DE TEXTO ---
+            const focusableElements = document.querySelectorAll('.focusable-text');
+            const UMBRAL = window.innerHeight / 2.5;
+
+            function updateTextFocus() {
+                const viewportCenter = window.innerHeight / 2;
+                focusableElements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    const elCenter = rect.top + rect.height / 2;
+                    const distance = Math.abs(viewportCenter - elCenter);
+                    let focus = 1 - (distance / UMBRAL) ** 2;
+                    focus = Math.max(0, focus);
+                    const opacity = 0.15 + focus * 0.85;
+                    el.style.opacity = opacity;
+                });
+            }
+
+            // --- LÓGICA PARA LÍNEAS DE CONEXIÓN DE NODOS (SVG) ---
+            const svg = document.getElementById('node-lines-svg');
+            const lineObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-drawing');
+                        lineObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            function drawConnections() {
+                if (!svg) return;
+                svg.innerHTML = '';
+                const connectionGroups = document.querySelectorAll('[data-connect-group]');
+                let lastNodeOfPreviousGroup = null;
+
+                connectionGroups.forEach(group => {
+                    const groupNodes = Array.from(group.querySelectorAll('.connect-node')).filter(el => {
+                        const rect = el.getBoundingClientRect();
+                        return rect.width > 0 && rect.height > 0;
+                    });
+
+                    if (lastNodeOfPreviousGroup && groupNodes.length > 0) {
+                        createPath(lastNodeOfPreviousGroup, groupNodes[0]);
+                    }
+
+                    for (let i = 0; i < groupNodes.length - 1; i++) {
+                        createPath(groupNodes[i], groupNodes[i + 1]);
+                    }
+
+                    if (groupNodes.length > 0) {
+                        lastNodeOfPreviousGroup = groupNodes[groupNodes.length - 1];
+                    }
+                });
+            }
+
+            function createPath(startEl, endEl) {
+                const startRect = startEl.getBoundingClientRect();
+                const endRect = endEl.getBoundingClientRect();
+                const scrollY = window.scrollY;
+
+                let startX = startRect.left + startRect.width / 2;
+                let startY = startRect.bottom + scrollY;
+                let endX = endRect.left + endRect.width / 2;
+                let endY = endRect.top + scrollY;
+
+                if (Math.abs(startRect.top - endRect.top) < 100) {
+                    startX = startRect.right;
+                    startY = startRect.top + scrollY + startRect.height / 2;
+                    endX = endRect.left;
+                    endY = endRect.top + scrollY + endRect.height / 2;
+                }
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const d = `M ${startX} ${startY} C ${startX} ${startY + 100}, ${endX} ${endY - 100}, ${endX} ${endY}`;
+                path.setAttribute('d', d);
+                path.classList.add('connecting-line');
+                svg.appendChild(path);
+                lineObserver.observe(path);
+            }
+
+            // --- LÓGICA PARA EFECTO 3D EN TARJETAS ---
+            // Efecto para tarjetas normales
+            const cards = document.querySelectorAll('.glass-panel:not(#contact-card-front):not([data-connect-group="4"] .glass-panel)');
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    const rotateX = -y / 20;
+                    const rotateY = x / 20;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+                });
+            });
+
+            // Efecto muy sutil para la tarjeta del fundador
+            const founderSection = document.getElementById('founder');
+            if (founderSection) {
+                const founderCard = founderSection.querySelector('.glass-panel');
+                if (founderCard) {
+                    // Primero eliminamos cualquier event listener existente
+                    const newFounderCard = founderCard.cloneNode(true);
+                    founderCard.parentNode.replaceChild(newFounderCard, founderCard);
+                    
+                    // Aplicamos el efecto muy sutil
+                    newFounderCard.addEventListener('mousemove', (e) => {
+                        const rect = newFounderCard.getBoundingClientRect();
+                        const x = e.clientX - rect.left - rect.width / 2;
+                        const y = e.clientY - rect.top - rect.height / 2;
+                        // Efecto extremadamente sutil
+                        const rotateX = -y / 120;  // Mínimo efecto
+                        const rotateY = x / 120;   // Mínimo efecto
+                        newFounderCard.style.transform = `perspective(2000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.002)`;
+                        newFounderCard.style.transition = 'transform 0.1s ease-out';
+                    });
+                    
+                    newFounderCard.addEventListener('mouseleave', () => {
+                        newFounderCard.style.transform = 'perspective(2000px) rotateX(0) rotateY(0) scale(1)';
+                        newFounderCard.style.transition = 'transform 0.3s ease-out';
+                    });
+                }
+            }
+
+            // --- LÓGICA PARA BOTÓN "VOLVER ARRIBA" Y MENÚ MÓVIL ---
+            const mainNav = document.getElementById('main-nav');
+            const backToTopBtn = document.getElementById('back-to-top');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            function handleScrollAppearance() {
+                const scrollY = window.scrollY;
+                if (scrollY > 50) {
+                    mainNav.classList.add('nav-scrolled');
+                } else {
+                    mainNav.classList.remove('nav-scrolled');
+                }
+                if (scrollY > window.innerHeight / 2) {
+                    backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+                    backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                } else {
+                    backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+                    backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                }
+            }
+
+            function triggerParticleBurst() {
+                targetIntensity = 10.0;
+                const originalColor = new THREE.Color(0x3b82f6);
+                const burstColor = new THREE.Color(0xA020F0);
+                if (points && points.material) {
+                    points.material.color = burstColor;
+                }
+                setTimeout(() => {
+                    targetIntensity = 0.3;
+                    if (points && points.material) {
+                        points.material.color = originalColor;
+                    }
+                }, 800);
+            }
+
+            backToTopBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                triggerParticleBurst();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // --- MANEJO DE EVENTOS OPTIMIZADO ---
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            let isTicking = false;
+            let scrollTimeout;
+            function onScroll() {
+                handleScrollAppearance();
+                targetIntensity = 1.5;
+                if (!isTicking) {
+                    window.requestAnimationFrame(() => {
+                        updateTextFocus();
+                        isTicking = false;
+                    });
+                    isTicking = true;
+                }
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => { targetIntensity = 0.3; }, 200);
+            }
+
+            // --- INICIALIZACIÓN ---
+            initThreeJS();
+            animate();
+            feather.replace();
+
+            // Usar un pequeño retraso para asegurar que el DOM esté completamente renderizado
+            setTimeout(() => {
+                drawConnections();
+                updateTextFocus();
+                handleScrollAppearance();
+            }, 100);
+
+            // Listeners
+            window.addEventListener('scroll', onScroll);
+            window.addEventListener('resize', debounce(() => {
+                if (renderer) {
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                }
+                setTimeout(drawConnections, 100);
+                updateTextFocus();
+            }, 150));
+
+            // --- LÓGICA DE DESPLAZAMIENTO SUAVE PERSONALIZADO ---
+            // Selecciona todos los enlaces de anclaje dentro del nav con la clase nav-link
+            const navLinks = document.querySelectorAll('nav a.nav-link');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Evita el comportamiento predeterminado del enlace
+                    e.preventDefault();
+
+                    // Obtiene el ID del objetivo desde el atributo href
+                    const targetId = this.getAttribute('href').substring(1); // Elimina el '#'
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        // Calcula la posición de desplazamiento
+                        // offsetTop es la distancia desde la parte superior del documento
+                        // mainNav.offsetHeight es la altura de la barra de navegación
+                        // Se resta un poco de espacio adicional (por ejemplo, 20px) para que no quede pegado
+                        const offsetTop = targetElement.offsetTop;
+                        const navbarHeight = document.getElementById('main-nav').offsetHeight;
+                        const additionalOffset = 20; // Espacio adicional en píxeles
+
+                        const scrollToPosition = offsetTop - navbarHeight - additionalOffset;
+
+                        // Realiza el desplazamiento suave
+                        window.scrollTo({
+                            top: scrollToPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // --- FORMULARIO DE CONTACTO INTERACTIVO ---
+            document.getElementById('contact-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const flipCard = document.querySelector('.flip-card');
+                const form = e.target;
+                const submitBtn = form.querySelector('button[type="submit"]');
+                
+                // Deshabilitar el botón para evitar múltiples envíos
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Enviando...';
+                
+                try {
+                    const formData = {
+                        name: form.name.value,
+                        email: form.email.value,
+                        message: form.message.value
+                    };
+
+                    const response = await fetch('http://localhost:3000/api/contact', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        form.reset();
+                        // Animación de éxito con tiempo extendido para leer el mensaje
+                        flipCard.style.transform = 'rotateY(180deg)';
+                        // Mostrar el mensaje por 3 segundos (3000ms) en lugar de 2
+                        setTimeout(() => {
+                            flipCard.style.transform = 'rotateY(0deg)';
+                        }, 3000);
+                    } else {
+                        throw new Error(result.message || 'Error al enviar el mensaje');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    // Solo log del error, sin alerta
+                } finally {
+                    // Re-habilitar el botón
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Enviar Mensaje';
+                }
+                // 1. Gira la tarjeta
+                flipCard.style.transform = 'rotateY(180deg)';
+
+                // 2. Crear partículas y animación después de que termine la animación de la tarjeta
+                setTimeout(() => {
+                    triggerParticleBurst();
+                    createParticles(document.querySelector('.flip-container'));
+                    
+                    // 3. Resetear tarjeta después de la animación de partículas
+                    setTimeout(() => {
+                        flipCard.style.transform = 'rotateY(0deg)';
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 2000); // Aumentado de 1000ms a 2000ms para más tiempo de visualización
+                }, 4000); // Aumentado de 3500ms a 4000ms para dar más tiempo a la animación inicial
+            });
+
+            // --- FUNCIONALIDAD DE PARTÍCULAS 2D ---
+            function createParticles(container) {
+                const particles = [];
+                const rect = container.getBoundingClientRect();
+                const colors = ['#8b5cf6', '#6366f1', '#a78bfa', '#c4b5fd'];
+
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    const size = 5 + Math.random() * 10;
+                    Object.assign(particle.style, {
+                        position: 'absolute',
+                        width: `${size}px`,
+                        height: `${size}px`,
+                        background: colors[Math.floor(Math.random() * colors.length)],
+                        borderRadius: '50%',
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                        boxShadow: '0 0 10px currentColor',
+                        left: `${rect.width / 2}px`,
+                        top: `${rect.height / 2}px`,
+                        transform: 'translate(-50%, -50%)',
+                        opacity: '0.8'
+                    });
+
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 50 + Math.random() * 150;
+                    const duration = 800 + Math.random() * 800;
+
+                    particle.animate([
+                        { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.8 },
+                        { transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0.1)`, opacity: 0 }
+                    ], {
+                        duration: duration,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        fill: 'forwards'
+                    });
+
+                    container.appendChild(particle);
+                    particles.push(particle);
+
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, duration);
+                }
+                return particles;
+            }
+            // --- LÓGICA DEL MODAL DE SERVICIOS ---
+            const serviceData = {
+                'Automatización de Facturas': 'Libera a tu equipo de la carga manual de facturación. Nuestro servicio con n8n crea un flujo automático que genera, envía y realiza el seguimiento de tus facturas. Reduce errores, asegura que tus cobros lleguen a tiempo y permite que tu personal se enfoque en tareas que realmente aportan valor.',
+                'Conciliación de Cuentas': 'Olvídate de las interminables horas comparando extractos bancarios y registros contables. Creamos un flujo automatizado que concilia tus cuentas por ti, identificando transacciones, detectando discrepancias y generando reportes claros. Asegura la precisión de tus finanzas y ten una visión clara de la salud de tu negocio en todo momento.',
+                'Atención al Cliente y Ventas': 'No dejes que un cliente potencial se enfríe. Automatizamos tus canales de comunicación para capturar cada lead, responder preguntas frecuentes al instante con chatbots y nutrir a tus prospectos con seguimientos automáticos. Ofrece un servicio 24/7 y libera a tu equipo de ventas para que se concentre en cerrar tratos.',
+                'Flujos Personalizados con n8n': '¿Tienes un proceso único que ninguna herramienta estándar puede manejar? Nosotros lo hacemos posible. Diseñamos y construimos automatizaciones a medida que conectan tus aplicaciones (CRM, ERP, hojas de cálculo, email, etc.) para que funcionen en perfecta sintonía. Sea cual sea tu desafío, creamos el flujo de trabajo exacto que tu negocio necesita.',
+                'Dashboards y Reportes en Power BI': 'Transforma tus datos complejos en decisiones inteligentes. Convertimos tus números de contabilidad, finanzas o carteras de inversión en dashboards interactivos y visuales. Obtén una visión clara y en tiempo real de tu rendimiento, identifica tendencias clave y presenta tus resultados de una forma profesional e impactante.'
+            };
+
+            const servicePanels = document.querySelectorAll('[data-connect-group="2"] .glass-panel');
+            const modal = document.getElementById('service-modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDescription = document.getElementById('modal-description');
+            const closeModalBtn = document.getElementById('modal-close-btn');
+
+            servicePanels.forEach(panel => {
+                panel.style.cursor = 'pointer';
+                panel.addEventListener('click', () => {
+                    const title = panel.querySelector('h3').textContent;
+                    if (serviceData[title]) {
+                        modalTitle.textContent = title;
+                        modalDescription.textContent = serviceData[title];
+                        modal.classList.remove('hidden');
+                        setTimeout(() => modalContent.classList.add('active'), 10); 
+                    }
+                });
+            });
+
+            function closeModal() {
+                modal.classList.add('opacity-0');
+                modalContent.classList.remove('active');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('opacity-0');
+                }, 300);
+            }
+
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
