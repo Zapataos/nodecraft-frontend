@@ -286,6 +286,12 @@
                                                class="w-full px-4 py-3 bg-black/30 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                                     </div>
                                     <div>
+                                        <label for="phone" class="block text-sm font-bold text-gray-300 mb-2">Teléfono (opcional)</label>
+                                        <input type="tel" id="phone" name="phone" 
+                                               class="w-full px-4 py-3 bg-black/30 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                               placeholder="+56 9 1234 5678">
+                                    </div>
+                                    <div>
                                         <label for="message" class="block text-sm font-bold text-gray-300 mb-2">¿Cómo podemos ayudarte?</label>
                                         <textarea id="message" name="message" rows="4" required 
                                                   class="w-full px-4 py-3 bg-black/30 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
@@ -640,6 +646,7 @@
                     const GOOGLE_FORM_FIELDS = {
                         name: 'entry.1581864622',
                         email: 'entry.1519206072',
+                        phone: 'entry.1164958962',
                         message: 'entry.1539881603'
                     };
                     // --- FIN CONFIGURACIÓN DE GOOGLE FORMS ---
@@ -647,6 +654,9 @@
                     const formData = new FormData();
                     formData.append(GOOGLE_FORM_FIELDS.name, form.name.value);
                     formData.append(GOOGLE_FORM_FIELDS.email, form.email.value);
+                    if (form.phone.value) {
+                        formData.append(GOOGLE_FORM_FIELDS.phone, form.phone.value);
+                    }
                     formData.append(GOOGLE_FORM_FIELDS.message, form.message.value);
 
                     // Enviar datos a Google Forms usando fetch
